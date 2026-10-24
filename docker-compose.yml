@@ -1,0 +1,44 @@
+# Démarrage : cp .env.example .env  (renseignez les secrets)  puis  docker compose up --build
+# Aucun secret n'est écrit dans ce fichier : tout vient de .env (ignoré par git).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: helpdesk
+      POSTGRES_USER: helpdesk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?définissez POSTGRES_PASSWORD dans .env}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helpdesk -d helpdesk"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Pas de port publié : la base n'est joignable que depuis le réseau interne de compose.
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      STORE: postgres
+      DATABASE_URL: postgres://helpdesk:${POSTGRES_PASSWORD}@db:5432/helpdesk?sslmode=disable
+      AUTO_MIGRATE: "true"
+      JWT_SECRET: ${JWT_SECRET:?définissez JWT_SECRET (32 caractères minimum) dans .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?définissez ADMIN_EMAIL dans .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?définissez ADMIN_PASSWORD dans .env}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrateur}
+      # Optionnel : active la classification par IA (sinon, règles locales par mots-clés).
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+
+volumes:
+  dbdata:

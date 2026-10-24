@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS ticket_status_history;
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS equipment;
+DROP TABLE IF EXISTS users;

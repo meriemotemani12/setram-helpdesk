@@ -1,0 +1,7 @@
+.git
+.github
+.env
+*.md
+Makefile
+docker-compose.yml
+**/*_test.go

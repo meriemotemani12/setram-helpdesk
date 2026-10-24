@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ترامواي سيدي بلعباس · الدعم التقني</title>
+  <meta name="description" content="إدارة طلبات الدعم التقني وجرد العتاد">
+  <meta name="theme-color" content="#172b4d">
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <a class="skip" href="#main" id="skip">تخطَّ إلى المحتوى</a>
+
+  <!-- Barre supérieure (mobile uniquement) -->
+  <div class="topbar" id="topbar" hidden>
+    <button type="button" class="icon-btn" id="menu-toggle" aria-controls="band" aria-expanded="false" aria-label="القائمة">
+      <span data-icon="menu"></span>
+    </button>
+    <a class="topbar-brand" href="#/tickets">
+      <img src="/assets/logo.svg" alt="" width="32" height="32">
+      <strong id="topbar-name">ترامواي سيدي بلعباس</strong>
+    </a>
+  </div>
+  <div class="backdrop" id="backdrop" hidden></div>
+
+  <!-- Barre latérale : fixe à gauche sur ordinateur, tiroir sur mobile. Remplie par renderBand() -->
+  <header class="band" id="band" hidden>
+    <div class="band-inner">
+      <button type="button" class="icon-btn menu-close" id="menu-close" aria-label="إغلاق">
+        <span data-icon="x"></span>
+      </button>
+      <a class="brand" href="#/tickets" aria-label="الرئيسية">
+        <span class="brand-logo"><img src="/assets/logo.svg" alt="" width="44" height="44"></span>
+        <span class="brand-text">
+          <strong id="brand-name">ترامواي سيدي بلعباس</strong>
+          <span id="brand-sub">الدعم التقني والجرد</span>
+        </span>
+      </a>
+      <nav class="nav" id="nav" aria-label="التنقل الرئيسي"></nav>
+      <div class="session">
+        <button type="button" class="side-btn" id="lang-toggle" aria-label="Changer de langue / تغيير اللغة">
+          <span data-icon="globe"></span><span id="lang-label">Français</span>
+        </button>
+        <div class="user-card" id="who">
+          <span class="avatar" id="avatar" aria-hidden="true"></span>
+          <span class="user-text"><strong id="who-name"></strong><span id="who-role"></span></span>
+        </div>
+        <button type="button" class="side-btn logout" id="logout">
+          <span data-icon="logout"></span><span id="logout-label">خروج</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <noscript><p class="noscript">هذا التطبيق يحتاج إلى تفعيل جافاسكربت. · Cette application nécessite JavaScript.</p></noscript>
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

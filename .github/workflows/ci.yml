@@ -1,0 +1,31 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: helpdesk
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: helpdesk_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U helpdesk -d helpdesk_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: go mod tidy
+      - run: go vet ./...
+      - run: go test -race -count=1 ./...
+      - name: Tests d'intégration PostgreSQL
+        env:
+          TEST_DATABASE_URL: postgres://helpdesk:ci-only-password@localhost:5432/helpdesk_test?sslmode=disable
+        run: go test -tags=integration -count=1 ./internal/store/postgres/...

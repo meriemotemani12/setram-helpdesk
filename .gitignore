@@ -1,0 +1,26 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Go build artifacts
+/bin/
+/server
+*.exe
+*.test
+*.out
+coverage.out
+
+# Temporary files and editor backups
+*.swp
+*.bak
+*.backup
+*.save
+*~
+
+# Local logs
+*.log
+
+# OS-generated files
+.DS_Store
+Thumbs.db

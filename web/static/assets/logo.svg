@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ترامواي سيدي بلعباس">
+  <!-- Pictogramme générique de tramway : à REMPLACER par le logo officiel de la société (avec son autorisation). -->
+  <rect width="64" height="64" rx="14" fill="#23262B"/>
+  <path d="M20 10h24" stroke="#E8A91C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 10v7" stroke="#E8A91C" stroke-width="3" stroke-linecap="round"/>
+  <rect x="15" y="17" width="34" height="30" rx="7" fill="#E8A91C"/>
+  <rect x="20" y="22" width="24" height="12" rx="3" fill="#23262B"/>
+  <circle cx="22" cy="40" r="2.6" fill="#23262B"/>
+  <circle cx="42" cy="40" r="2.6" fill="#23262B"/>
+  <path d="M18 54h28" stroke="#E8A91C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M22 47l-4 7M42 47l4 7" stroke="#E8A91C" stroke-width="3" stroke-linecap="round"/>
+</svg>
