@@ -1,0 +1,458 @@
+openapi: 3.0.3
+
+info:
+  title: SETRAM Helpdesk API
+  description: REST API for IT support tickets and equipment management.
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Current server
+
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Users
+  - name: Tickets
+  - name: Equipment
+  - name: Analytics
+  - name: AI
+
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Check application health
+      responses:
+        "200":
+          description: Application is healthy
+
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate a user
+      description: Authenticate with email and password. Login attempts are rate-limited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@setram.test
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, expires_at, user]
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  expires_at:
+                    type: string
+                    format: date-time
+                  user:
+                    type: object
+                    description: Authenticated user information
+        "401":
+          description: Invalid credentials
+        "422":
+          description: Invalid request body
+        "429":
+          description: Too many login attempts
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying
+              schema:
+                type: integer
+                example: 60
+        "500":
+          description: Internal server error
+
+  /api/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current user information
+
+  /api/users:
+    get:
+      tags: [Users]
+      summary: List users
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User list
+    post:
+      tags: [Users]
+      summary: Create a user
+      description: Create a user account. Only administrators can perform this operation.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, full_name, role, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: technician@setram.test
+                full_name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: Support Technician
+                role:
+                  type: string
+                  enum: [employee, technician, admin]
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 128
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  email:
+                    type: string
+                    format: email
+                  full_name:
+                    type: string
+                  role:
+                    type: string
+                    enum: [employee, technician, admin]
+                  active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+        "401":
+          description: Missing or invalid authentication
+        "403":
+          description: Administrator role required
+        "409":
+          description: A conflicting user account already exists
+        "422":
+          description: Invalid request body or field values
+        "500":
+          description: Internal server error
+
+  /api/tickets:
+    get:
+      tags: [Tickets]
+      summary: List tickets
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Ticket list
+    post:
+      tags: [Tickets]
+      summary: Create a ticket
+      description: Create a support ticket. Category and priority are optional; AI suggestions and default values may be used.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description]
+              properties:
+                title:
+                  type: string
+                  minLength: 3
+                  maxLength: 200
+                  example: Computer cannot connect to the network
+                description:
+                  type: string
+                  minLength: 5
+                  maxLength: 5000
+                  example: The workstation cannot access the internal network.
+                category:
+                  type: string
+                  enum: [computer, network, printer, ticketing_counter, other]
+                  example: network
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                  example: medium
+                equipment_id:
+                  type: integer
+                  format: int64
+                  nullable: true
+                  example: 12
+      responses:
+        "201":
+
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+              example:
+                id: 42
+                title: Computer cannot connect to the network
+                description: The workstation cannot access the internal network.
+                category: network
+                priority: medium
+                status: new
+                requester_id: 7
+                assignee_id: null
+                equipment_id: 12
+                ai_category: network
+                ai_priority: medium
+                ai_summary: Network connectivity issue
+                ai_source: groq
+                created_at: "2026-10-24T10:00:00Z"
+                updated_at: "2026-10-24T10:00:00Z"
+                started_at: null
+                resolved_at: null
+
+        "401":
+          description: Missing or invalid authentication
+        "404":
+          description: Equipment not found
+        "422":
+          description: Invalid JSON or field values
+        "500":
+          description: Internal server error
+
+  /api/tickets/classify:
+    post:
+      tags: [AI]
+      summary: Classify an incident
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Classification result
+
+  /api/tickets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Tickets]
+      summary: Get a ticket
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Ticket details
+    patch:
+      tags: [Tickets]
+      summary: Update a ticket
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Ticket updated
+
+  /api/tickets/{id}/status:
+    post:
+      tags: [Tickets]
+      summary: Change ticket status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status updated
+
+  /api/tickets/{id}/comments:
+    post:
+      tags: [Tickets]
+      summary: Add a ticket comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Comment added
+
+  /api/equipment:
+    get:
+      tags: [Equipment]
+      summary: List equipment
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Equipment list
+    post:
+      tags: [Equipment]
+      summary: Create equipment
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: Equipment created
+
+  /api/equipment/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Equipment]
+      summary: Get equipment
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Equipment details
+    put:
+      tags: [Equipment]
+      summary: Update equipment
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Equipment updated
+
+  /api/stats:
+    get:
+      tags: [Analytics]
+      summary: Get service statistics
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Service statistics
+
+  /api/ai/insights:
+    get:
+      tags: [AI]
+      summary: Get AI insights
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: AI insights
+
+components:
+  schemas:
+    Ticket:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - category
+        - priority
+        - status
+        - requester_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [computer, network, printer, ticketing_counter, other]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [new, in_progress, done]
+        requester_id:
+          type: integer
+          format: int64
+        assignee_id:
+          type: integer
+          format: int64
+          nullable: true
+        equipment_id:
+          type: integer
+          format: int64
+          nullable: true
+        ai_category:
+          type: string
+          enum: [computer, network, printer, ticketing_counter, other]
+          nullable: true
+        ai_priority:
+          type: string
+          enum: [low, medium, high, critical]
+          nullable: true
+        ai_summary:
+          type: string
+          nullable: true
+        ai_source:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        requester_name:
+          type: string
+        assignee_name:
+          type: string
+        equipment_tag:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
